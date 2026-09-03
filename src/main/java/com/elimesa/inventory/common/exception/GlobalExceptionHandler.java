@@ -4,6 +4,7 @@ import com.elimesa.inventory.product.exception.InsufficientStockException;
 import com.elimesa.inventory.product.exception.ProductNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -69,6 +70,22 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
+                .body(error);
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiError> handleOptimisticLock(
+            ObjectOptimisticLockingFailureException exception
+    ) {
+        ApiError error = new ApiError(
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                "product was modified by another request. Please retry.",
+                Instant.now()
+        );
+
+        return ResponseEntity.status(
+                HttpStatus.CONFLICT)
                 .body(error);
     }
 }

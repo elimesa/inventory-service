@@ -123,6 +123,7 @@ Example response:
 - Insufficient stock returns `409 Conflict`.
 - Missing products return `404 Not Found`.
 - Invalid requests return `400 Bad Request`.
+- Concurrent product updates are protected with optimistic locking.
 
 ## Error Response
 
@@ -142,7 +143,7 @@ Example:
 The project includes:
 
 - Service unit tests using JUnit 5 and Mockito.
-- Controller validation tests using MockMvc.
+- Controller validation and error-mapping tests using MockMvc.
 - A Spring application context test.
 
 Run all tests with:
@@ -158,3 +159,4 @@ Run all tests with:
 - Business rules are located inside the `Product` entity.
 - Service methods use transactions for state-changing operations.
 - API exceptions are handled centrally with `GlobalExceptionHandler`.
+- JPA `@Version` is used to detect concurrent stock updates and prevent lost updates.
