@@ -11,6 +11,8 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -18,6 +20,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 @WebMvcTest(ProductController.class)
 public class ProductControllerTest {
@@ -70,4 +74,33 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.message").value("product was modified by another request. Please retry."
                 ));
     }
+
+    @Test
+    void shouldUseDefaultThresholdWhenNotProvided() throws Exception {
+        when(productService.getLowStock(5))
+                .thenReturn(List.of());
+
+        mockMvc.perform(get("/products/low-stock"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+
+        verify(productService).getLowStock(5);
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenThresholdIsNegative() throws Exception {
+        mockMvc.perform(
+                        get("/products/low-stock")
+                                .param("threshold", "-1")
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message")
+                        .value("Threshold must be zero or greater"));
+
+        verifyNoInteractions(productService);
+    }
+
+
 }

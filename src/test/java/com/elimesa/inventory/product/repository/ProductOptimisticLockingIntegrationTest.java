@@ -9,10 +9,10 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.math.BigDecimal;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 public class ProductOptimisticLockingIntegrationTest {
@@ -68,5 +68,43 @@ public class ProductOptimisticLockingIntegrationTest {
                 productRepository.findById(productId).orElseThrow();
 
         assertEquals(9, currentProduct.getStock());
+    }
+
+    @Test
+    void shouldFindLowStockProductsOrderedByStockAscending() {
+        productRepository.saveAllAndFlush(List.of(
+                new Product("High stock", new BigDecimal("100.00"), 10),
+                new Product("Threshold stock", new BigDecimal("80.00"), 5),
+                new Product("Low stock", new BigDecimal("50.00"), 2),
+                new Product("No stock", new BigDecimal("20.00"), 0)
+        ));
+
+        List<Product> products =
+                productRepository
+                        .findByStockLessThanEqualOrderByStockAsc(5);
+
+        assertEquals(
+                List.of(0, 2, 5),
+                products.stream()
+                        .map(Product::getStock)
+                        .toList()
+        );
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenNoProductHasLowStock() {
+        productRepository.saveAndFlush(
+                new Product(
+                        "High stock",
+                        new BigDecimal("100.00"),
+                        10
+                )
+        );
+
+        List<Product> products =
+                productRepository
+                        .findByStockLessThanEqualOrderByStockAsc(5);
+
+        assertTrue(products.isEmpty());
     }
 }

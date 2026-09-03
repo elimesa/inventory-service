@@ -85,6 +85,16 @@ public class ProductService {
         return toResponse(product);
     }
 
+
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getLowStock(int threshold) {
+        return productRepository
+                .findByStockLessThanEqualOrderByStockAsc(threshold)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     private ProductResponse toResponse(Product product) {
         return new ProductResponse(
                 product.getId(),

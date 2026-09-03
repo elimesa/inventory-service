@@ -2,16 +2,20 @@ package com.elimesa.inventory.common.exception;
 
 import com.elimesa.inventory.product.exception.InsufficientStockException;
 import com.elimesa.inventory.product.exception.ProductNotFoundException;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -86,6 +90,29 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(
                 HttpStatus.CONFLICT)
+                .body(error);
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ApiError> handleValidation(
+            HandlerMethodValidationException exception
+    ) {
+        String message = exception.getAllErrors()
+                .stream()
+                .map(MessageSourceResolvable::getDefaultMessage)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse("Invalid request");
+
+        ApiError error = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                message,
+                Instant.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
                 .body(error);
     }
 }
