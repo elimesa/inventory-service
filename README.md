@@ -145,6 +145,7 @@ The project includes:
 - Service unit tests using JUnit 5 and Mockito.
 - Controller validation and error-mapping tests using MockMvc.
 - A Spring application context test.
+- JPA integration test verifies optimistic locking behavior using H2.
 
 Run all tests with:
 
