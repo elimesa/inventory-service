@@ -5,6 +5,7 @@ import com.elimesa.inventory.product.dto.ProductResponse;
 import com.elimesa.inventory.product.service.ProductService;
 import com.elimesa.inventory.product.dto.PurchaseRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,5 +59,17 @@ public class ProductController {
             @Valid @RequestBody PurchaseRequest request
     ) {
         return productService.purchase(id, request);
+    }
+
+    @GetMapping("/low-stock")
+    public List<ProductResponse> lowStock(
+            @RequestParam(defaultValue = "5")
+            @Min(
+                    value = 0,
+                    message = "Threshold must be zero or greater"
+            )
+            int threshold
+    ) {
+        return productService.getLowStock(threshold);
     }
 }
