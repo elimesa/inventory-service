@@ -75,6 +75,7 @@ The application uses an in-memory H2 database. Data is cleared when the applicat
 | `DELETE` | `/products/{id}` | Delete a product |
 | `POST` | `/products/{id}/purchase` | Purchase product units |
 | GET | `/products/low-stock?threshold=5` | List products with stock less than or equal to the threshold, ordered ascending (default: 5) |
+| GET | `/products/search?name={name}&page=0&size=10` | Search products by name with pagination and alphabetical ordering |
 
 ## Create a Product
 

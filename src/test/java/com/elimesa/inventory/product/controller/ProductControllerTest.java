@@ -1,5 +1,7 @@
 package com.elimesa.inventory.product.controller;
 
+import com.elimesa.inventory.product.dto.ProductPageResponse;
+import com.elimesa.inventory.product.dto.ProductResponse;
 import com.elimesa.inventory.product.dto.PurchaseRequest;
 import com.elimesa.inventory.product.entity.Product;
 import com.elimesa.inventory.product.service.ProductService;
@@ -99,6 +101,57 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.message")
                         .value("Threshold must be zero or greater"));
 
+        verifyNoInteractions(productService);
+    }
+
+    @Test
+    void shouldUseDefaultSearchParameters() throws Exception {
+        ProductPageResponse response = new ProductPageResponse(
+                List.of(),
+                0,
+                10,
+                0L,
+                0,
+                true
+        );
+
+        when(productService.searchProducts(null, 0, 10))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/products/search"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0))
+                .andExpect(jsonPath("$.last").value(true));
+
+        verify(productService).searchProducts(null, 0, 10);
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenPageIsNegative() throws Exception {
+        mockMvc.perform(get("/products/search")
+                        .param("page", "-1")
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Page must be zero or greater"));
+        verifyNoInteractions(productService);
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenSizeIsOutsideAllowedRange() throws Exception {
+        mockMvc.perform(get("/products/search")
+                        .param("size", "51")
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Size must be between 1 and 50"));
         verifyNoInteractions(productService);
     }
 
