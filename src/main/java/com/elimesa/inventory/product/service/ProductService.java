@@ -1,11 +1,16 @@
 package com.elimesa.inventory.product.service;
 
+import com.elimesa.inventory.product.dto.ProductPageResponse;
 import com.elimesa.inventory.product.entity.Product;
 import com.elimesa.inventory.product.exception.ProductNotFoundException;
 import com.elimesa.inventory.product.repository.ProductRepository;
 import com.elimesa.inventory.product.dto.ProductRequest;
 import com.elimesa.inventory.product.dto.ProductResponse;
 import com.elimesa.inventory.product.dto.PurchaseRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -93,6 +98,42 @@ public class ProductService {
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ProductPageResponse searchProducts(String name, int page, int size) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by("name")
+                        .ascending()
+                        .and(Sort.by("id").ascending())
+        );
+        Page<Product> productPage;
+
+        if(name == null || name.isEmpty()) {
+            productPage = productRepository.findAll(pageable);
+        }else {
+            productPage = productRepository.findByNameContainingIgnoreCase(
+                    name.trim(),
+                    pageable
+            );
+        }
+
+        List<ProductResponse> content = productPage
+                .getContent()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+
+        return  new ProductPageResponse(
+                content,
+                productPage.getNumber(),
+                productPage.getSize(),
+                productPage.getTotalElements(),
+                productPage.getTotalPages(),
+                productPage.isLast()
+        );
     }
 
     private ProductResponse toResponse(Product product) {

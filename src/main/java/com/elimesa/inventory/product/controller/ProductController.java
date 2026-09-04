@@ -1,11 +1,15 @@
 package com.elimesa.inventory.product.controller;
 
+import com.elimesa.inventory.product.dto.ProductPageResponse;
 import com.elimesa.inventory.product.dto.ProductRequest;
 import com.elimesa.inventory.product.dto.ProductResponse;
 import com.elimesa.inventory.product.service.ProductService;
 import com.elimesa.inventory.product.dto.PurchaseRequest;
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Null;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -71,5 +75,24 @@ public class ProductController {
             int threshold
     ) {
         return productService.getLowStock(threshold);
+    }
+
+    @GetMapping("/search")
+    public ProductPageResponse search(
+            @RequestParam(required = false)
+            String name,
+
+            @RequestParam(defaultValue = "0")
+            @Min(value = 0, message = "Page must be zero or greater")
+            int page,
+
+            @RequestParam(defaultValue = "10")
+            @Min(value = 1, message = "Size must be between 1 and 50")
+            @Max(value = 50, message = "Size must be between 1 and 50")
+            int size
+    ) {
+
+        return  productService.searchProducts(name,page,size);
+
     }
 }
